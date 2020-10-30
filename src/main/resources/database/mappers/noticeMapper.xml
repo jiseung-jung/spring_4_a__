@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.choa.s4.board.notice.NoticeDAO">
+
+	<update id="setUpdate" parameterType="NoticeDTO">
+		update notice set title=#{title}, contents=#{contents} where num=#{num}
+	</update>
+
+
+	<delete id="setDelete" parameterType="NoticeDTO">
+		delete notice where num=#{num}
+	</delete>
+
+	<resultMap type="NoticeDTO" id="getOneResult">
+		<id column="n" property="num" />
+		<result column="t" property="title"/>
+		<result column="writer" property="writer"/>
+		<result column="contents" property="contents"/>
+	</resultMap>
+
+	<select id="getOne" parameterType="NoticeDTO" resultMap="getOneResult">
+		select num as n, title as t, writer, contents from notice where num = #{num}
+	</select>
+	
+	<insert id="setInsert" parameterType="NoticeDTO">
+		insert into notice values(notice_seq.nextval, #{title}, #{writer}, #{contents}, sysdate, 0)
+	</insert>
+	
+	<select id="getList" resultType="NoticeDTO" parameterType="Pager">
+		select * from
+		(select rownum R, N.* from 
+		(select * from notice where 
+		<choose>
+			<when test="kind == 'tt'">
+				title
+			</when>
+			
+			<when test="kind == 'wr'">
+				writer
+			</when>
+			
+			<otherwise>
+				contents
+			</otherwise>
+		</choose>
+		like '%'||#{search}||'%' order by num desc) N)
+		where R between #{startRow} and #{lastRow}
+	</select>
+	
+	<select id="getCount" resultType="Long" parameterType="Pager">
+		select count(num) from notice
+		where 
+		<choose>
+			<when test="kind == 'tt'">
+				title
+			</when>
+			<when test="kind == 'wr'">
+				writer
+			</when>
+			<otherwise>
+				contents
+			</otherwise>
+		</choose>
+		like '%' || #{search} || '%'
+	</select>
+	
+	
+	
+</mapper>    
